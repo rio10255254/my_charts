@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>台灣各空品區SO₂濃度趨勢圖</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
     <style>
@@ -27,8 +26,6 @@
     </div>
 
     <script>
-    // 使用 window.onload 確保頁面元素都準備好了
-    window.onload = function() {
         var so2Data = {
             '北部空品區': [2.12, 1.74, 1.06, 1.02, 1.01], '竹苗空品區': [1.90, 1.87, 1.11, 1.10, 1.11],
             '中部空品區': [2.26, 2.19, 1.38, 1.40, 1.24], '雲嘉南空品區': [2.25, 2.02, 1.53, 1.49, 1.43],
@@ -48,7 +45,6 @@
             };
         });
 
-        // 關鍵3: 使用與 v2.9.4 函式庫完全匹配的 options 語法
         var chart = new Chart(ctx, {
             type: 'line',
             data: { labels: years, datasets: datasets },
@@ -76,7 +72,6 @@
             }
         });
 
-        // 自定義圖例功能
         function generateCustomLegend() {
             var legendContainer = document.getElementById('customLegend');
             legendContainer.innerHTML = '';
@@ -91,10 +86,8 @@
                 label.textContent = dataset.label;
                 legendItem.appendChild(colorBox);
                 legendItem.appendChild(label);
-                
                 var meta = chart.getDatasetMeta(index);
                 legendItem.style.opacity = meta.hidden ? '0.4' : '1';
-
                 legendItem.onclick = function() {
                     var meta = chart.getDatasetMeta(index);
                     meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
@@ -105,7 +98,6 @@
             });
         }
         generateCustomLegend();
-    };
     </script>
 </body>
 </html>

@@ -6,7 +6,7 @@
     <title>歷年燃煤與燃氣發電佔比趨勢</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
     <style>
-        /* 所有樣式均保持您上一版本的設定 */
+        /* 所有樣式均保持不變 */
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: auto; font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
@@ -52,33 +52,20 @@
 
     <script>
     window.onload = function() {
-        // 【數據更新】: 使用從圖片中提取的發電佔比數據
         var powerData = {
             '燃煤': [44.97, 44.27, 42.00, 42.21, 39.27],
             '燃氣': [35.67, 37.23, 38.87, 39.54, 42.45]
         };
         var years = [2020, 2021, 2022, 2023, 2024];
-        
-        // 【顏色更新】: 為兩條線選擇對比鮮明的顏色
-        var colors = ['#778DA9', '#D6A2AD']; // 分別代表 燃煤(灰藍) 和 燃氣(藕粉)
-
+        var colors = ['#778DA9', '#D6A2AD'];
         var ctx = document.getElementById('powerChart').getContext('2d');
         
-        // 程式直接遍歷 powerData 物件，無需合併數據
         var datasets = Object.keys(powerData).map(function(sourceName, index) {
             return {
-                label: sourceName, 
-                data: powerData[sourceName], 
-                borderColor: colors[index],
-                backgroundColor: 'rgba(0,0,0,0)', 
-                borderWidth: 7, 
-                fill: false, 
-                lineTension: 0.3,
-                pointRadius: 7, 
-                pointHoverRadius: 9, 
-                pointBackgroundColor: colors[index],
-                pointBorderColor: '#ffffff', 
-                pointBorderWidth: 5
+                label: sourceName, data: powerData[sourceName], borderColor: colors[index],
+                backgroundColor: 'rgba(0,0,0,0)', borderWidth: 7, fill: false, lineTension: 0.3,
+                pointRadius: 7, pointHoverRadius: 9, pointBackgroundColor: colors[index],
+                pointBorderColor: '#ffffff', pointBorderWidth: 5
             };
         });
 
@@ -87,17 +74,23 @@
             data: { labels: years, datasets: datasets },
             options: {
                 responsive: true, maintainAspectRatio: false,
+                
+                // 【新增】: 明確定義動畫效果，以覆蓋預設行為
+                animation: {
+                    duration: 1200, // 動畫持續時間 (毫秒)，數值越大動畫越慢
+                    easing: 'easeOutQuart' // 動畫的緩動效果 (可選)
+                },
+                
                 layout: { padding: { left: 15, right: 25, top: 15, bottom: 10 } },
                 legend: { display: false },
                 tooltips: {
                     mode: 'index', intersect: false,
                     titleFontSize: 30, bodyFontSize: 30,
-                    // 【標籤更新】: 修改提示框的單位
                     callbacks: {
                         label: function(tooltipItem, data) {
                             var label = data.datasets[tooltipItem.datasetIndex].label || '';
                             if (label) { label += ': '; }
-                            label += tooltipItem.yLabel + ' %'; // 單位改為 %
+                            label += tooltipItem.yLabel + ' %';
                             return label;
                         }
                     }
@@ -108,12 +101,10 @@
                         ticks: { fontSize: 30 }
                     }],
                     yAxes: [{
-                        // 【標籤更新】: 修改 Y 軸標題與單位
                         scaleLabel: { display: true, labelString: '發電佔比 (%)', fontSize: 30, fontStyle: 'bold' },
-                        ticks: { 
-                            fontSize: 30, 
-                            beginAtZero: false, // 佔比圖通常不需要從0開始，視覺效果更好
-                            // 添加 % 符號到刻度上
+                        ticks: {
+                            fontSize: 30,
+                            beginAtZero: false,
                             callback: function(value, index, values) {
                                 return value + '%';
                             }
@@ -123,7 +114,7 @@
             }
         });
 
-        // 自定義圖例功能 (無需修改)
+        // 自定義圖例功能
         function generateCustomLegend() {
             var legendContainer = document.getElementById('customLegend');
             legendContainer.innerHTML = '';

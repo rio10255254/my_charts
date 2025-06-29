@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣各空品區SO₂濃度趨勢圖</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+        }
+        
+        .title {
+            text-align: center;
+            color: #5a6c7d;
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin-bottom: 30px;
+        }
+        
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .legend-item:hover {
+            background-color: #f5f6f7;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        
+        .legend-text {
+            font-size: 14px;
+            color: #5a6c7d;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .chart-container {
+                height: 400px;
+            }
+            
+            .legend-container {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">台灣各空品區SO₂濃度變化趨勢 (2020-2024)</h1>
+        
+        <div class="chart-container">
+            <canvas id="so2Chart"></canvas>
+        </div>
+        
+        <div class="legend-container" id="customLegend">
+            <!-- 圖例將在這裡生成 -->
+        </div>
+    </div>
+
+    <script>
+        // SO₂數據 (ppb)
+        var so2Data = {
+            '北部空品區': [2.12, 1.74, 1.06, 1.02, 1.01],
+            '竹苗空品區': [1.90, 1.87, 1.11, 1.10, 1.11],
+            '中部空品區': [2.26, 2.19, 1.38, 1.40, 1.24],
+            '雲嘉南空品區': [2.25, 2.02, 1.53, 1.49, 1.43],
+            '高屏空品區': [2.35, 2.17, 1.59, 1.46, 1.42],
+            '宜蘭空品區': [1.78, 1.41, 0.87, 0.82, 0.78],
+            '花東空品區': [1.19, 1.14, 0.82, 0.66, 0.86]
+        };
+
+        var years = [2020, 2021, 2022, 2023, 2024];
+        
+        // 柔和但易區分的配色
+        var colors = [
+            '#6B8E9D', // 灰藍
+            '#D4956C', // 暖橘棕
+            '#7B9A7E', // 森林綠
+            '#B4869F', // 玫瑰紫
+            '#A0A47A', // 橄欖黃
+            '#8D9AC6', // 薰衣草藍
+            '#C9937A'  // 暖珊瑚色
+        ];
+
+        var ctx = document.getElementById('so2Chart').getContext('2d');
+        
+        // 【修正2】: 將箭頭函式改成傳統 function
+        var datasets = Object.keys(so2Data).map(function(region, index) {
+            return {
+                label: region,
+                data: so2Data[region],
+                borderColor: colors[index],
+                backgroundColor: colors[index] + '15',
+                borderWidth: 2.5,
+                fill: false,
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: colors[index],
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: colors[index],
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 2
+            };
+        });
+
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(90, 108, 125, 0.9)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(90, 108, 125, 0.2)',
+                        borderWidth: 1,
+                        cornerRadius: 6,
+                        displayColors: true,
+                        titleFont: {
+                            size: 13
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            // 【修正3】: 將樣板字串改成傳統字串串接
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y + ' ppb';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '年份',
+                            font: {
+                                size: 14,
+                                weight: '600'
+                            },
+                            color: '#5a6c7d'
+                        },
+                        grid: {
+                            color: 'rgba(90, 108, 125, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#5a6c7d'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'SO₂ 濃度 (ppb)',
+                            font: {
+                                size: 14,
+                                weight: '600'
+                            },
+                            color: '#5a6c7d'
+                        },
+                        grid: {
+                            color: 'rgba(90, 108, 125, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#5a6c7d'
+                        },
+                        beginAtZero: true
+                    }
+                },
+                animation: {
+                    duration: 1500,
+                    easing: 'easeInOutCubic'
+                }
+            }
+        });
+
+        // 生成自定義圖例
+        function generateCustomLegend() {
+            var legendContainer = document.getElementById('customLegend');
+            
+            Object.keys(so2Data).forEach(function(region, index) {
+                var legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                
+                var colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                colorBox.style.backgroundColor = colors[index];
+                
+                var label = document.createElement('span');
+                label.className = 'legend-text';
+                label.textContent = region;
+                
+                legendItem.appendChild(colorBox);
+                legendItem.appendChild(label);
+                legendContainer.appendChild(legendItem);
+                
+                // 點擊圖例項目來顯示/隱藏數據線
+                legendItem.addEventListener('click', function() {
+                    var meta = chart.getDatasetMeta(index);
+                    meta.hidden = !meta.hidden;
+                    chart.update();
+                    
+                    legendItem.style.opacity = meta.hidden ? '0.4' : '1';
+                });
+            });
+        }
+
+        // 初始化圖例
+        generateCustomLegend();
+    </script>
+</body>
+</html>

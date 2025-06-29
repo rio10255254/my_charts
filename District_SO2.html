@@ -5,201 +5,139 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>台灣各空品區SO₂濃度趨勢圖</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <script src="chart.min.js"></script>
     <style>
-        body {
-            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
-            background: #f8f9fa;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-        }
-        .title {
-            text-align: center;
-            color: #5a6c7d;
-            font-size: 1.8em;
-            font-weight: 600;
-            margin-bottom: 30px;
-        }
-        .chart-container {
-            position: relative;
-            height: 500px;
-            margin-bottom: 30px;
-        }
-        .legend-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            padding: 20px 0;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 15px;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-            cursor: pointer;
-        }
-        .legend-item:hover {
-            background-color: #f5f6f7;
-        }
-        .legend-color {
-            width: 16px;
-            height: 3px;
-            border-radius: 2px;
-        }
-        .legend-text {
-            font-size: 14px;
-            color: #5a6c7d;
-            font-weight: 500;
-        }
+        body { font-family: 'Microsoft JhengHei', 'Arial', sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); padding: 30px; }
+        .title { text-align: center; color: #5a6c7d; font-size: 1.8em; font-weight: 600; margin-bottom: 30px; }
+        .chart-container { position: relative; height: 500px; margin-bottom: 30px; }
+        .legend-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px 0; }
+        .legend-item { display: flex; align-items: center; gap: 10px; padding: 8px 15px; border-radius: 6px; transition: background-color 0.2s ease; cursor: pointer; }
+        .legend-item:hover { background-color: #f5f6f7; }
+        .legend-color { width: 16px; height: 3px; border-radius: 2px; }
+        .legend-text { font-size: 14px; color: #5a6c7d; font-weight: 500; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="title">台灣各空品區SO₂濃度變化趨勢 (2020-2024)</h1>
-        
         <div class="chart-container">
             <canvas id="so2Chart"></canvas>
         </div>
-        
-        <div class="legend-container" id="customLegend">
-            </div>
+        <div class="legend-container" id="customLegend"></div>
     </div>
 
     <script>
-        // 使用 window.onload 等待頁面完全載入後再執行腳本，確保相容性
-        window.onload = function() {
-
-            // SO₂數據 (ppb) - 使用 var 確保相容性
-            var so2Data = {
-                '北部空品區': [2.12, 1.74, 1.06, 1.02, 1.01],
-                '竹苗空品區': [1.90, 1.87, 1.11, 1.10, 1.11],
-                '中部空品區': [2.26, 2.19, 1.38, 1.40, 1.24],
-                '雲嘉南空品區': [2.25, 2.02, 1.53, 1.49, 1.43],
-                '高屏空品區': [2.35, 2.17, 1.59, 1.46, 1.42],
-                '宜蘭空品區': [1.78, 1.41, 0.87, 0.82, 0.78],
-                '花東空品區': [1.19, 1.14, 0.82, 0.66, 0.86]
+    window.onload = function() {
+        var so2Data = {
+            '北部空品區': [2.12, 1.74, 1.06, 1.02, 1.01],
+            '竹苗空品區': [1.90, 1.87, 1.11, 1.10, 1.11],
+            '中部空品區': [2.26, 2.19, 1.38, 1.40, 1.24],
+            '雲嘉南空品區': [2.25, 2.02, 1.53, 1.49, 1.43],
+            '高屏空品區': [2.35, 2.17, 1.59, 1.46, 1.42],
+            '宜蘭空品區': [1.78, 1.41, 0.87, 0.82, 0.78],
+            '花東空品區': [1.19, 1.14, 0.82, 0.66, 0.86]
+        };
+        var years = [2020, 2021, 2022, 2023, 2024];
+        var colors = ['#6B8E9D', '#D4956C', '#7B9A7E', '#B4869F', '#A0A47A', '#8D9AC6', '#C9937A'];
+        var ctx = document.getElementById('so2Chart').getContext('2d');
+        
+        var datasets = Object.keys(so2Data).map(function(region, index) {
+            return {
+                label: region,
+                data: so2Data[region],
+                borderColor: colors[index],
+                backgroundColor: 'rgba(0,0,0,0)',
+                borderWidth: 2.5,
+                fill: false,
+                lineTension: 0.3, // tension 在 v2 中是 lineTension
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: colors[index],
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2
             };
+        });
 
-            var years = [2020, 2021, 2022, 2023, 2024];
-            
-            var colors = [
-                '#6B8E9D', '#D4956C', '#7B9A7E', '#B4869F',
-                '#A0A47A', '#8D9AC6', '#C9937A'
-            ];
-
-            // 確定能找到 canvas 元素
-            var ctx = document.getElementById('so2Chart').getContext('2d');
-            
-            // 使用傳統 function 確保相容性
-            var datasets = Object.keys(so2Data).map(function(region, index) {
-                return {
-                    label: region,
-                    data: so2Data[region],
-                    borderColor: colors[index],
-                    backgroundColor: colors[index] + '15',
-                    borderWidth: 2.5,
-                    fill: false,
-                    tension: 0.3,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: colors[index],
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointHoverBackgroundColor: colors[index],
-                    pointHoverBorderColor: '#ffffff',
-                    pointHoverBorderWidth: 2
-                };
-            });
-
-            var chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: datasets
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: datasets
+            },
+            // 【最終修正】: 使用 Chart.js v2 的正確 options 語法
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                legend: { // 圖例設定直接放在 options 下
+                    display: false 
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                // 使用字串串接確保相容性
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y + ' ppb';
-                                }
+                tooltips: { // 提示框在 v2 中叫做 tooltips
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+                            if (label) {
+                                label += ': ';
                             }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: '年份'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'SO₂ 濃度 (ppb)'
-                            },
-                            beginAtZero: true
+                            label += tooltipItem.yLabel + ' ppb'; // 在 v2 中使用 yLabel
+                            return label;
                         }
                     }
+                },
+                scales: { // 坐標軸在 v2 中需要指定 xAxes 和 yAxes
+                    xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: '年份'
+                        }
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'SO₂ 濃度 (ppb)'
+                        },
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
                 }
-            });
+            }
+        });
 
-            // 生成自定義圖例
-            function generateCustomLegend() {
-                var legendContainer = document.getElementById('customLegend');
-                
-                Object.keys(so2Data).forEach(function(region, index) {
-                    var legendItem = document.createElement('div');
-                    legendItem.className = 'legend-item';
-                    
-                    var colorBox = document.createElement('div');
-                    colorBox.className = 'legend-color';
-                    colorBox.style.backgroundColor = colors[index];
-                    
-                    var label = document.createElement('span');
-                    label.className = 'legend-text';
-                    label.textContent = region;
-                    
-                    legendItem.appendChild(colorBox);
-                    legendItem.appendChild(label);
-                    legendContainer.appendChild(legendItem);
-                    
-                    // 使用 onclick 確保舊版瀏覽器相容性
+        // 自定義圖例生成函式
+        function generateCustomLegend() {
+            var legendContainer = document.getElementById('customLegend');
+            legendContainer.innerHTML = '';
+            var datasets = chart.data.datasets;
+            for (var i = 0; i < datasets.length; i++) {
+                var legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                var colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                colorBox.style.backgroundColor = datasets[i].borderColor;
+                var label = document.createElement('span');
+                label.className = 'legend-text';
+                label.textContent = datasets[i].label;
+                legendItem.appendChild(colorBox);
+                legendItem.appendChild(label);
+
+                // 使用閉包來正確地傳遞 index
+                (function(index) {
                     legendItem.onclick = function() {
                         var meta = chart.getDatasetMeta(index);
-                        meta.hidden = !meta.hidden;
-                        chart.update();
-                        
+                        // v2 的隱藏邏輯
+                        meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
                         legendItem.style.opacity = meta.hidden ? '0.4' : '1';
+                        chart.update();
                     };
-                });
+                })(i);
+                legendContainer.appendChild(legendItem);
             }
-
-            // 初始化圖例
-            generateCustomLegend();
-        };
+        }
+        generateCustomLegend();
+    };
     </script>
 </body>
 </html>

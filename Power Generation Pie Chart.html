@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge*"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>莫蘭迪色系數據圓餅圖</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/0.7.0/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        body {
+            font-family: 'Aptos', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            height: 50vh;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 15px;
+            height: 100%;
+            padding: 10px;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 4px 16px rgba(120, 113, 108, 0.1);
+            border: 1px solid rgba(200, 200, 200, 0.3);
+            transition: transform 0.2s ease;
+            position: relative;
+            height: 100%;
+            min-height: 400px;
+        }
+        
+        .chart-container:hover {
+            transform: scale(1.02);
+        }
+        
+        .chart-title {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            color: #6b5e52;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: 1px;
+            font-family: 'Aptos', 'Segoe UI', sans-serif;
+            z-index: 10;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: calc(100% - 80px);
+            width: 100%;
+            margin-top: 50px;
+        }
+        
+        .data-labels {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 1.2rem;
+            color: #8b7a6b;
+            line-height: 1.6;
+            font-family: 'Aptos', 'Segoe UI', sans-serif;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .chart-title {
+                font-size: 1.4rem;
+            }
+            .chart-container {
+                min-height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">2020年數據分布</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart2020"></canvas>
+                </div>
+                 
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">2021年數據分布</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart2021"></canvas>
+                </div>
+                 
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">2022年數據分布</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart2022"></canvas>
+                </div>
+                 
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">2023年數據分布</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart2023"></canvas>
+                </div>
+                 
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">2024年數據分布</h3>
+                <div class="chart-wrapper">
+                    <canvas id="chart2024"></canvas>
+                </div>
+                 
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 多彩莫蘭迪調色盤 (功能不變)
+        var morandiColors = [
+            '#d4b5a0', '#a8b8c8', '#c4a6a6', '#b5c4a0', '#d4c4a0', 
+            '#a0a8c4', '#c4a0b5', '#a0c4b5', '#c0a8d4'
+        ];
+
+        // 原始數據 (年份轉換為西元)
+        var rawData = [
+            [2020, 137.8, 870.53, 30.64, 974.4, 41.02, 31.47, 303.42, 0],
+            [2021, 157.77, 882.06, 39.5, 1057.53, 51.31, 31.73, 268.18, 0],
+            [2022, 216.32, 872.95, 35.05, 1089.1, 34.38, 30.52, 229.17, 0],
+            [2023, 243.34, 836.05, 30.57, 1083.28, 59.4, 30.42, 171.53, 0],
+            [2024, 300.16, 782.29, 34.45, 1187.49, 59.19, 30.66, 117.27, 2.94]
+        ];
+
+        // 數據標籤 (功能不變)
+        var dataLabels = ['再生能源', '燃煤', '燃油', '燃氣', '汽電共生', '抽蓄水力', '核能', '電池儲能'];
+
+        // Chart.js v2 全局配置
+        Chart.defaults.global.defaultFontFamily = "'Aptos', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        Chart.defaults.global.defaultFontColor = '#7a6b5e';
+
+        // 創建圓餅圖的函數
+        function createPieChart(canvasId, year, data, colors) {
+            var ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // 數據預處理邏輯 (功能不變)
+            var dataWithLabels = [];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i] > 0) {
+                    dataWithLabels.push({
+                        value: data[i],
+                        label: dataLabels[i],
+                        color: colors[i % colors.length]
+                    });
+                }
+            }
+            dataWithLabels.sort(function(a, b) { return b.value - a.value; });
+            
+            var sortedData = dataWithLabels.map(function(item) { return item.value; });
+            var sortedLabels = dataWithLabels.map(function(item) { return item.label; });
+            var sortedColors = dataWithLabels.map(function(item) { return item.color; });
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: sortedLabels,
+                    datasets: [{
+                        data: sortedData,
+                        backgroundColor: sortedColors,
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 150,
+                            bottom: 40,
+                            left: 150,
+                            right: 230
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            fontSize: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            fontStyle: 'bold'
+                        }
+                    },
+                    tooltips: {
+                        backgroundColor: 'rgba(122, 107, 94, 0.95)',
+                        titleFontColor: '#ffffff',
+                        bodyFontColor: '#ffffff',
+                        borderColor: '#d4b5a0',
+                        borderWidth: 2,
+                        cornerRadius: 10,
+                        titleFontSize: 30,
+                        bodyFontSize: 30,
+                        titleFontFamily: "'Aptos', 'Segoe UI', sans-serif",
+                        bodyFontFamily: "'Aptos', 'Segoe UI', sans-serif",
+                        titleFontStyle: 'bold',
+                        bodyFontStyle: 'bold',
+                        callbacks: {
+                            label: function(tooltipItem, data) {
+                                var dataset = data.datasets[tooltipItem.datasetIndex];
+                                var total = dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                var currentValue = dataset.data[tooltipItem.index];
+                                var percentage = ((currentValue / total) * 100).toFixed(1);
+                                var label = data.labels[tooltipItem.index] || '';
+                                return label + ': ' + currentValue.toFixed(2) + ' (' + percentage + '%)';
+                            }
+                        }
+                    },
+                    hover: {
+                        mode: 'point',
+                        intersect: false,
+                        animationDuration: 300
+                    },
+                    plugins: {
+                        datalabels: {
+                            display: true,
+                            color: '#6b5e52',
+                            font: {
+                                weight: 'bold',
+                                size: 30,
+                                family: "'Aptos', 'Segoe UI', sans-serif"
+                            },
+                            formatter: function(value, context) {
+                                var dataset = context.chart.data.datasets[context.datasetIndex];
+                                var total = dataset.data.reduce(function(previousValue, currentValue) {
+                                    return previousValue + currentValue;
+                                });
+                                var percentage = ((value / total) * 100).toFixed(1);
+                                return percentage + '%';
+                            },
+                            anchor: 'end',
+                            align: 'end',
+                            offset: 60,
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            borderColor: '#d4b5a0',
+                            borderWidth: 1,
+                            borderRadius: 12,
+                            padding: {
+                                top: 15,
+                                bottom: 15,
+                                left: 20,
+                                right: 20
+                            },
+                            clip: false,
+                            textAlign: 'center'
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // 創建自定義側邊圖例
+        function createCustomLegend(chart, year) {
+            var legendContainer = document.getElementById('legend' + year);
+            legendContainer.innerHTML = '';
+            
+            var legendHTML = '<div style="font-size: 14px; line-height: 2;">';
+            var data = chart.data;
+            
+            for (var i = 0; i < data.labels.length; i++) {
+                var color = data.datasets[0].backgroundColor[i];
+                var label = data.labels[i];
+                var value = data.datasets[0].data[i];
+                var total = data.datasets[0].data.reduce(function(a, b) { return a + b; }, 0);
+                var percentage = ((value / total) * 100).toFixed(1);
+                
+                legendHTML += '<div style="display: flex; align-items: center; margin-bottom: 8px;">';
+                legendHTML += '<div style="width: 16px; height: 16px; background-color: ' + color + '; border-radius: 50%; margin-right: 10px; flex-shrink: 0;"></div>';
+                legendHTML += '<span style="color: #6b5e52; font-weight: 500;">' + label + ' (' + percentage + '%)</span>';
+                legendHTML += '</div>';
+            }
+            legendHTML += '</div>';
+            
+            legendContainer.innerHTML = legendHTML;
+        }
+        
+        // 為每年創建圓餅圖 (功能不變)
+        for (var i = 0; i < rawData.length; i++) {
+            var yearData = rawData[i];
+            var year = yearData[0];
+            var values = yearData.slice(1);
+            var canvasId = 'chart' + year;
+            createPieChart(canvasId, year, values, morandiColors);
+        }
+    </script>
+</body>
+</html>

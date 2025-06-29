@@ -4,105 +4,64 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台灣各空品區SO₂濃度趨勢圖</title>
-    <script src="chart.min.js"></script>
+    <title>台灣各空品區SO₂濃度趨勢圖 (診斷版)</title>
+    
+    <script>
+        var cacheBuster = "v=" + new Date().getTime();
+        var script = document.createElement('script');
+        script.src = "https://rio10255254.github.io/my_charts/chart.min.js?" + cacheBuster;
+        document.head.appendChild(script);
+    </script>
+    
     <style>
         body { font-family: 'Microsoft JhengHei', 'Arial', sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); padding: 30px; }
         .title { text-align: center; color: #5a6c7d; font-size: 1.8em; font-weight: 600; margin-bottom: 30px; }
         .chart-container { position: relative; height: 500px; margin-bottom: 30px; }
-        .legend-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px 0; }
-        .legend-item { display: flex; align-items: center; gap: 10px; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
-        .legend-color { width: 16px; height: 3px; border-radius: 2px; }
-        .legend-text { font-size: 14px; color: #5a6c7d; font-weight: 500; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="title">台灣各空品區SO₂濃度變化趨勢 (2020-2024)</h1>
+        <h1 class="title">台灣各空品區SO₂濃度變化趨勢</h1>
         <div class="chart-container">
             <canvas id="so2Chart"></canvas>
         </div>
-        <div class="legend-container" id="customLegend"></div>
-    </div>
+        </div>
 
     <script>
+    // 將所有繪圖程式碼延後執行，確保函式庫有足夠時間載入
     window.onload = function() {
-        var so2Data = {
-            '北部空品區': [2.12, 1.74, 1.06, 1.02, 1.01], '竹苗空品區': [1.90, 1.87, 1.11, 1.10, 1.11],
-            '中部空品區': [2.26, 2.19, 1.38, 1.40, 1.24], '雲嘉南空品區': [2.25, 2.02, 1.53, 1.49, 1.43],
-            '高屏空品區': [2.35, 2.17, 1.59, 1.46, 1.42], '宜蘭空品區': [1.78, 1.41, 0.87, 0.82, 0.78],
-            '花東空品區': [1.19, 1.14, 0.82, 0.66, 0.86]
-        };
-        var years = [2020, 2021, 2022, 2023, 2024];
-        var colors = ['#6B8E9D', '#D4956C', '#7B9A7E', '#B4869F', '#A0A47A', '#8D9AC6', '#C9937A'];
-        var ctx = document.getElementById('so2Chart').getContext('2d');
         
-        var datasets = Object.keys(so2Data).map(function(region, index) {
-            return {
-                label: region, data: so2Data[region], borderColor: colors[index],
-                backgroundColor: 'rgba(0,0,0,0)', borderWidth: 2.5, fill: false, lineTension: 0.3,
-                pointRadius: 5, pointHoverRadius: 7, pointBackgroundColor: colors[index],
-                pointBorderColor: '#ffffff', pointBorderWidth: 2
-            };
-        });
-
-        var chart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: years, datasets: datasets },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                legend: { display: false },
-                tooltips: {
-                    mode: 'index', intersect: false,
-                    callbacks: {
-                        label: function(tooltipItem, data) {
-                            var label = data.datasets[tooltipItem.datasetIndex].label || '';
-                            if (label) { label += ': '; }
-                            label += tooltipItem.yLabel + ' ppb';
-                            return label;
-                        }
-                    }
-                },
-                scales: {
-                    xAxes: [{ scaleLabel: { display: true, labelString: '年份' } }],
-                    yAxes: [{
-                        scaleLabel: { display: true, labelString: 'SO₂ 濃度 (ppb)' },
-                        ticks: { beginAtZero: true }
-                    }]
+        // 【關鍵修正2】: 增加診斷檢查
+        // 給予 500 毫秒的延遲，等待外部腳本載入
+        setTimeout(function() {
+            try {
+                // 在使用前，檢查 Chart 物件是否真的存在
+                if (typeof Chart === 'undefined') {
+                    alert('錯誤：圖表函式庫 (Chart.js) 載入失敗！\n\n請檢查您的網路連線或 PowerPoint 的安全性設定。');
+                    return;
                 }
-            }
-        });
 
-        function generateCustomLegend() {
-            var legendContainer = document.getElementById('customLegend');
-            legendContainer.innerHTML = '';
-            chart.data.datasets.forEach(function(dataset, index) {
-                var legendItem = document.createElement('div');
-                legendItem.className = 'legend-item';
-                var colorBox = document.createElement('div');
-                colorBox.className = 'legend-color';
-                colorBox.style.backgroundColor = dataset.borderColor;
-                var label = document.createElement('span');
-                label.className = 'legend-text';
-                label.textContent = dataset.label;
-                legendItem.appendChild(colorBox);
-                legendItem.appendChild(label);
-                
-                var meta = chart.getDatasetMeta(index);
-                legendItem.style.opacity = meta.hidden ? '0.4' : '1';
+                // 如果成功，註冊一個更美觀的全局字體
+                Chart.defaults.global.defaultFontFamily = "'Microsoft JhengHei', 'Arial', sans-serif";
 
-                legendItem.onclick = function() {
-                    var meta = chart.getDatasetMeta(index);
-                    meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
-                    legendItem.style.opacity = meta.hidden ? '0.4' : '1';
-                    chart.update();
+                var so2Data = {
+                    '北部': [2.12, 1.74, 1.06, 1.02, 1.01], '竹苗': [1.90, 1.87, 1.11, 1.10, 1.11],
+                    '中部': [2.26, 2.19, 1.38, 1.40, 1.24], '雲嘉南': [2.25, 2.02, 1.53, 1.49, 1.43],
+                    '高屏': [2.35, 2.17, 1.59, 1.46, 1.42], '宜蘭': [1.78, 1.41, 0.87, 0.82, 0.78],
+                    '花東': [1.19, 1.14, 0.82, 0.66, 0.86]
                 };
-                legendContainer.appendChild(legendItem);
-            });
-        }
-        generateCustomLegend();
-    };
-    </script>
-</body>
-</html>
+                var years = [2020, 2021, 2022, 2023, 2024];
+                var colors = ['#6B8E9D', '#D4956C', '#7B9A7E', '#B4869F', '#A0A47A', '#8D9AC6', '#C9937A'];
+                var ctx = document.getElementById('so2Chart').getContext('2d');
+                
+                var datasets = Object.keys(so2Data).map(function(region, index) {
+                    return {
+                        label: region + "空品區", data: so2Data[region], borderColor: colors[index],
+                        backgroundColor: 'rgba(0,0,0,0)', borderWidth: 2.5, fill: false, lineTension: 0.3,
+                        pointRadius: 5, pointHoverRadius: 7, pointBackgroundColor: colors[index],
+                        pointBorderColor: '#ffffff', pointBorderWidth: 2
+                    };
+                });
+
+                new Chart(ctx,

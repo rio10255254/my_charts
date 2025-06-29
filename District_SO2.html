@@ -4,16 +4,72 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <title>台灣各空品區SO₂濃度趨勢圖</title>
-    <script src="chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
     <style>
-        body { font-family: 'Microsoft JhengHei', 'Arial', sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); padding: 30px; }
-        .title { text-align: center; color: #5a6c7d; font-size: 1.8em; font-weight: 600; margin-bottom: 30px; }
-        .chart-container { position: relative; height: 500px; margin-bottom: 30px; }
-        .legend-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px 0; }
-        .legend-item { display: flex; align-items: center; gap: 10px; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
-        .legend-color { width: 16px; height: 3px; border-radius: 2px; }
-        .legend-text { font-size: 14px; color: #5a6c7d; font-weight: 500; }
+        /* 【重大修正】: 讓 HTML 和 Body 填滿整個可視區域 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 隱藏滾動條 */
+            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+            background-color: white; /* 背景直接設為白色 */
+        }
+
+        /* 【重大修正】: 讓主容器填滿 Body，並使用 Flexbox 佈局 */
+        .container {
+            width: 100%;
+            height: 100%;
+            padding: 20px; /* 在容器內部留出一些呼吸空間 */
+            box-sizing: border-box; /* 確保 padding 不會讓容器超出範圍 */
+            display: flex;
+            flex-direction: column; /* 讓子項目垂直排列 */
+        }
+        
+        .title {
+            text-align: center;
+            color: #5a6c7d;
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            flex-shrink: 0; /* 防止標題在空間不足時被壓縮 */
+        }
+
+        /* 【重大修正】: 讓圖表容器自動伸展，填滿剩餘空間 */
+        .chart-container {
+            position: relative;
+            flex-grow: 1; /* 關鍵！讓此元素佔據所有剩餘的垂直空間 */
+            min-height: 0; /* 在 flex 佈局中防止內容溢出 */
+        }
+        
+        /* 【重大修正】: 圖例容器不伸展，保持原有大小 */
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px 0 0 0; /* 調整與圖表間的距離 */
+            flex-shrink: 0; /* 防止圖例在空間不足時被壓縮 */
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .legend-color {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        .legend-text {
+            font-size: 14px;
+            color: #5a6c7d;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -26,6 +82,8 @@
     </div>
 
     <script>
+    // JavaScript 部分無需修改，可直接運作
+    window.onload = function() {
         var so2Data = {
             '北部空品區': [2.12, 1.74, 1.06, 1.02, 1.01], '竹苗空品區': [1.90, 1.87, 1.11, 1.10, 1.11],
             '中部空品區': [2.26, 2.19, 1.38, 1.40, 1.24], '雲嘉南空品區': [2.25, 2.02, 1.53, 1.49, 1.43],
@@ -49,7 +107,11 @@
             type: 'line',
             data: { labels: years, datasets: datasets },
             options: {
-                responsive: true, maintainAspectRatio: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: { left: 15, right: 25, top: 15, bottom: 10 }
+                },
                 legend: { display: false },
                 tooltips: {
                     mode: 'index', intersect: false,
@@ -86,8 +148,10 @@
                 label.textContent = dataset.label;
                 legendItem.appendChild(colorBox);
                 legendItem.appendChild(label);
+                
                 var meta = chart.getDatasetMeta(index);
                 legendItem.style.opacity = meta.hidden ? '0.4' : '1';
+
                 legendItem.onclick = function() {
                     var meta = chart.getDatasetMeta(index);
                     meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
@@ -98,6 +162,7 @@
             });
         }
         generateCustomLegend();
+    };
     </script>
 </body>
 </html>

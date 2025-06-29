@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <title>台灣各空品區NO₂濃度趨勢圖</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+    <style>
+        /* 所有樣式均保持您上一版本的設定 */
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: auto; font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+            background-color: white;
+        }
+        .container {
+            width: 100%; height: 100%; padding: 20px; box-sizing: border-box;
+            display: flex; flex-direction: column;
+        }
+        .title {
+            text-align: center; color: #5a6c7d; font-size: 1.4em; font-weight: 600;
+            margin-bottom: 15px; flex-shrink: 0;
+        }
+        .chart-container {
+            position: relative;
+            height: 1080px;
+        }
+        .legend-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;
+            padding: 15px 0 0 0; flex-shrink: 0;
+        }
+        .legend-item {
+            display: flex; align-items: center; gap: 10px; padding: 8px 15px;
+            border-radius: 6px; cursor: pointer;
+        }
+        .legend-color {
+            width: 30px; height: 8px; border-radius: 5px;
+        }
+        .legend-text {
+            font-size: 30px;
+            color: #5a6c7d; font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">台灣各空品區NO₂濃度變化趨勢 (2020-2024)</h1>
+        <div class="chart-container">
+            <canvas id="no2Chart"></canvas>
+        </div>
+        <div class="legend-container" id="customLegend"></div>
+    </div>
+
+    <script>
+    window.onload = function() {
+        // 【數據更新】: 使用從圖片中提取的 NO2 數據
+        var no2Data = {
+            '北部空品區':   [13.14, 12.39, 11.81, 11.68, 11.64],
+            '竹苗空品區':   [8.59,  9.09,  7.57,  7.87,  7.32],
+            '中部空品區':   [11.34, 11.32, 10.01, 9.62,  8.56],
+            '雲嘉南空品區': [9.91,  9.56,  8.58,  8.19,  8.14],
+            '高屏空品區':   [11.04, 11.18, 10.50, 9.87,  9.72],
+            '宜蘭空品區':   [6.02,  5.34,  5.60,  5.51,  5.28],
+            '花東空品區':   [4.87,  4.46,  4.37,  4.11,  4.04]
+        };
+        var years = [2020, 2021, 2022, 2023, 2024];
+
+        // --- 【數據合併邏輯開始】 ---
+        function averageArrays(arr1, arr2) {
+            var result = [];
+            for (var i = 0; i < arr1.length; i++) {
+                var avg = ((arr1[i] + arr2[i]) / 2).toFixed(2);
+                result.push(parseFloat(avg));
+            }
+            return result;
+        }
+        var mergedData = {
+            '北部及竹苗空品區': averageArrays(no2Data['北部空品區'], no2Data['竹苗空品區']),
+            '中部及雲嘉南空品區': averageArrays(no2Data['中部空品區'], no2Data['雲嘉南空品區']),
+            '高屏空品區': no2Data['高屏空品區'],
+            '宜蘭空品區': no2Data['宜蘭空品區'],
+            '花東空品區': no2Data['花東空品區']
+        };
+        // --- 【數據合併邏輯結束】 ---
+
+        var colors = ['#778DA9', '#D6A2AD', '#E0BBE4', '#95B8D1', '#B7B7B7'];
+        var ctx = document.getElementById('no2Chart').getContext('2d');
+        
+        var datasets = Object.keys(mergedData).map(function(region, index) {
+            return {
+                label: region, 
+                data: mergedData[region], 
+                borderColor: colors[index],
+                backgroundColor: 'rgba(0,0,0,0)', 
+                borderWidth: 7, 
+                fill: false, 
+                lineTension: 0.3,
+                pointRadius: 7, 
+                pointHoverRadius: 9, 
+                pointBackgroundColor: colors[index],
+                pointBorderColor: '#ffffff', 
+                pointBorderWidth: 5
+            };
+        });
+
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: years, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                layout: { padding: { left: 15, right: 25, top: 15, bottom: 10 } },
+                legend: { display: false },
+                tooltips: {
+                    mode: 'index', intersect: false,
+                    titleFontSize: 30, bodyFontSize: 30,
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+                            if (label) { label += ': '; }
+                            label += tooltipItem.yLabel + ' ppb';
+                            return label;
+                        }
+                    }
+                },
+                scales: {
+                    xAxes: [{
+                        scaleLabel: { display: true, labelString: '年份', fontSize: 30, fontStyle: 'bold' },
+                        ticks: { fontSize: 30 }
+                    }],
+                    yAxes: [{
+                        // 【標籤更新】
+                        scaleLabel: { display: true, labelString: 'NO₂ 濃度 (ppb)', fontSize: 30, fontStyle: 'bold' },
+                        ticks: { fontSize: 30, beginAtZero: true }
+                    }]
+                }
+            }
+        });
+
+        function generateCustomLegend() {
+            var legendContainer = document.getElementById('customLegend');
+            legendContainer.innerHTML = '';
+            chart.data.datasets.forEach(function(dataset, index) {
+                var legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                var colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                colorBox.style.backgroundColor = dataset.borderColor;
+                var label = document.createElement('span');
+                label.className = 'legend-text';
+                label.textContent = dataset.label;
+                legendItem.appendChild(colorBox);
+                legendItem.appendChild(label);
+                
+                var meta = chart.getDatasetMeta(index);
+                legendItem.style.opacity = meta.hidden ? '0.4' : '1';
+                legendItem.onclick = function() {
+                    var meta = chart.getDatasetMeta(index);
+                    meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
+                    legendItem.style.opacity = meta.hidden ? '0.4' : '1';
+                    chart.update();
+                };
+                legendContainer.appendChild(legendItem);
+            });
+        }
+        generateCustomLegend();
+    };
+    </script>
+</body>
+</html>
